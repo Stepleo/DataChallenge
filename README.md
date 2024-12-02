@@ -1,6 +1,6 @@
 # Template Kit for RAMP challenge
 
-[![Build Status](https://travis-ci.org/ramp-kits/template-kit.svg?branch=master)](https://travis-ci.org/ramp-kits/template-kit)
+[![Build status](https://github.com/ramp-kits/template-kit/actions/workflows/test.yml/badge.svg)](https://github.com/ramp-kits/template-kit/actions/workflows/test.yml)
 
 ## Introduction
 
