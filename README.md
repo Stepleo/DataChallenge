@@ -1,21 +1,14 @@
-# RAMP starting kit on classification of variable stars from light curves
+# Template Kit for RAMP challenge
 
-[![Build Status](https://travis-ci.org/ramp-kits/variable_stars.svg?branch=master)](https://travis-ci.org/ramp-kits/variable_stars)
+[![Build Status](https://travis-ci.org/ramp-kits/template-kit.svg?branch=master)](https://travis-ci.org/ramp-kits/template-kit)
 
-Most stars emit light steadily in time, but a small fraction of them has a
-variable light curve: light emission versus time. We call them variable stars.
-The light curves are usually periodic and highly regular. There are essentially
-two reasons why light emission can vary. First, the star itself can be
-oscillating, so its light emission varies in time. Second, the star that seems
-a single point at Earth (because of our large distance) is actually a binary
-system: two stars that orbit around their common center of gravity. When the
-orbital plane is parallel to our line of view, the stars eclipse each other
-periodically, creating a light curve with a characteristic signature.
-Identifying, classifying, and analyzing variable stars are hugely important for
-calibrating distances, and making these analyses automatic will be crucial in
-the upcoming sky survey projects such as LSST.
+## Introduction
 
-The challenge in this RAMP is to design an algorithm to automatically classify variable stars from light curves.
+Describe the challenge, in particular:
+
+- Where the data comes from?
+- What is the task this challenge aims to solve?
+- Why does it matter?
 
 ## Getting started
 
@@ -35,7 +28,7 @@ usage.
 ### Challenge description
 
 Get started on this RAMP with the
-[dedicated notebook](variable_stars_starting_kit.ipynb).
+[dedicated notebook](template_starting_kit.ipynb).
 
 ### Test a submission
 
