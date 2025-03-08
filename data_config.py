@@ -45,7 +45,7 @@ class DataConfig:
         "maximum_5_day_precipitation": "max-5day-precipitation",
         "number_of_consecutive_wet_days": "number-of-consecutive-wet-days",
         "number_of_precipitation_days_exceeding_20mm": "number-of-events-exceeding-20mm",
-        "number_of_precipitation_days_exceeding_fixed_percentile": "number-of-events-exceeding-fixed-percentile",
+        # "number_of_precipitation_days_exceeding_fixed_percentile": "number-of-events-exceeding-fixed-percentile",
         "number_of_wet_days": "number-of-wet-days",
         "total_precipitation": "total-precipitation",
     }
