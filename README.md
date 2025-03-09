@@ -48,10 +48,17 @@ Which means we had to create a ground truth some other way for our study. We use
 To run a submission and the notebook, you will need the dependencies listed in `requirements.txt`. You can install the dependencies with the following command-line:
 
 ```bash
-pip install -U -r requirements.txt
+pip install -U -r requirements.txt # should be working with python 3.11 in case of any issues du to python versions.
 ```
+### Running experiments
 
+for simply training and evaluating the prediction of the placeholder target value of flood risk run: 
+
+```bash
+ramp-test --submission base
+```
 For testing the impact of emissions, we propose these two files as we could not find a way to save a model trained by ramp-workflow or use it for inference. experiment 1 uses the placeholder value in X_train and X_test.
+
 ``` bash
 python experiment1.py
 ``` 
@@ -62,7 +69,7 @@ Experiment 2 uses the real discharge value from the GLOFAS dataset to check that
 python experiment2.py
 ``` 
 
-The expected outcomes of these files was to check that in the different scenrios we predict different levels of risk. High emissions mean worse climate predictions and more flood risk. Unfortunately we were not able to prove that.
+The expected outcomes of these experiments was to check that in the different scenrios we predict different levels of risk. High emissions mean worse climate predictions and more flood risk. Unfortunately we were not able to prove that.
 
 ### API
 
