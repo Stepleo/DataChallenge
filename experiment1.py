@@ -12,23 +12,28 @@ def load_data(file_path):
     return pd.read_csv(file_path)
 
 # Paths to the data files
-train_data_path = 'data/flood_risk_data.csv'  # Replace with your actual file path
+train_data_path = 'data/X_train.csv'
+test_data_path = 'data/X_test.csv'
 inference_data_paths = [
-    'data/ssp1_df.csv',  # Replace with your actual file path
-    'data/ssp2_df.csv',  # Replace with your actual file path
-    'data/ssp5_df.csv'   # Replace with your actual file path
+    'data/ssp1_df.csv',
+    'data/ssp2_df.csv',
+    'data/ssp5_df.csv'
 ]
 
 # Load the training data
 train_df = load_data(train_data_path)
-
-# Convert target to categorical levels
-train_df['target_category'] = pd.qcut(train_df['target'], q=4, labels=False)
+test_df = load_data(test_data_path)
 
 # Features and target
-features = ['longitude', 'latitude', 'Runoff', 'SnowDepth']
-X = train_df[features]
-y = train_df['target_category']
+features = ['longitude', 'latitude', 'air_temperature', 'precipitation']
+X_train = train_df[features]
+y_train = train_df['target']
+
+X_test = test_df[features]
+y_test = test_df['target']
+
+X = pd.concat([X_train, X_test])
+y = pd.concat([y_train, y_test])
 
 print("Training Data Summary:")
 print(X.info())
@@ -36,9 +41,6 @@ print("\n")
 print("Target Distribution:")
 print(y.value_counts(normalize=True))
 print("\n")
-
-# Split the data into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
 
 # Initialize the scaler
 scaler = StandardScaler()
@@ -48,8 +50,8 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # Check if the model is already trained and saved
-model_path = 'model.pkl'
-scaler_path = 'scaler.pkl'
+model_path = 'model_target.pkl'
+scaler_path = 'scaler_target.pkl'
 
 if os.path.exists(model_path) and os.path.exists(scaler_path):
     del X, y, X_train, y_train, X_train_scaled, X_test_scaled
@@ -82,32 +84,31 @@ for i, path in enumerate(inference_data_paths, start=1):
     df = load_data(path)
 
     # Prepare the features for inference
-    df['Runoff'] = df['total_runoff'].fillna(0)  # Assuming missing values are filled with 0
-    df['SnowDepth'] = df['snowfall_flux']  # Assuming snowfall_flux is equivalent to SnowDepth
+    X_new = df[features]
 
     # Scale the features
-    X_new = df[features]
     X_new_scaled = scaler.transform(X_new)
 
     # Make predictions
-    df['predicted_target_category'] = model.predict(X_new_scaled)
+    df['predicted_target'] = model.predict(X_new_scaled)
 
     # Save the new predictions
-    output_path = f'{path}_predictions.csv'
+    output_path = f'{path}_target_predictions.csv'
     df.to_csv(output_path, index=False)
     print(f"Predictions saved to {output_path}\n")
 
     # Analyze the results
-    print(f"Inference Dataset {i} - Flood Risk Analysis:")
-    print(df['predicted_target_category'].value_counts(normalize=True))
+    print(f"Inference Dataset {i} - Target Analysis:")
+    print(df['predicted_target'].value_counts(normalize=True))
     print("\n")
 
-# Compare the overall flood risks across the datasets
-overall_risks = []
+# Compare the overall target predictions across the datasets
+overall_targets = []
 for i, path in enumerate(inference_data_paths, start=1):
-    df = load_data(f'{path}_predictions.csv')
-    overall_risks.append(df['predicted_target_category'].mean())
+    df = load_data(f'{path}_target_predictions.csv')
+    overall_targets.append(df['predicted_target'].value_counts(normalize=True))
 
-print("Overall Flood Risks for Each Lifestyle Hypothesis:")
-for i, risk in enumerate(overall_risks, start=1):
-    print(f"Lifestyle Hypothesis {i}: {risk:.4f}")
+print("Overall Target Predictions for Each Lifestyle Hypothesis:")
+for i, target_dist in enumerate(overall_targets, start=1):
+    print(f"Lifestyle Hypothesis {i}:")
+    print(target_dist)
