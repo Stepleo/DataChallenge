@@ -7,7 +7,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 problem_title = 'Template RAMP kit to create data challenges'
 
-_prediction_label_names = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+_prediction_label_names = [0, 1]
 
 # A type (class) which will be used to create wrapper objects for y_pred
 Predictions = rw.prediction_types.make_multiclass(
@@ -32,6 +32,9 @@ def load_data(path='.', file='X_train.csv'):
     X_df = pd.read_csv(path / file)
 
     y = X_df['target']
+    # map target to integer if not already
+    if y.dtype == 'object':
+        y = y.map({'high': 1, 'low': 0})
     X_df = X_df.drop(columns=['target'])
 
     return X_df, y
