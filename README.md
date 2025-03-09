@@ -48,7 +48,10 @@ Which means we had to create a ground truth some other way for our study. We use
 To run a submission and the notebook, you will need the dependencies listed in `requirements.txt`. You can install the dependencies with the following command-line:
 
 ```bash
+conda create -n Flood_DC python==3.11
+conda activate Flood_DC
 pip install -U -r requirements.txt # should be working with python 3.11 in case of any issues du to python versions.
+
 ```
 ### Running experiments
 
