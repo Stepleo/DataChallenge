@@ -18,12 +18,13 @@ Predictions = rw.prediction_types.make_multiclass(
 workflow = rw.workflows.Estimator()
 
 score_types = [
+    
     rw.score_types.Accuracy(name='accuracy', precision=4),
 ]
 
 
 def get_cv(X, y):
-    cv = StratifiedShuffleSplit(n_splits=8, test_size=0.2, random_state=57)
+    cv = StratifiedShuffleSplit(n_splits=5, test_size=0.2)
     return cv.split(X, y)
 
 

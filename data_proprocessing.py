@@ -16,24 +16,36 @@ def load_data():
     Ultimately return the historical + categorical variable (training) and the projections data (inference).
     """
 
+    print("Loading datasets into dataframes...", end="", flush=True)
     precipitation_df = load_precipitation_data()
+    print(f"Precipitation data loaded with {len(precipitation_df)} samples.")
     categorical_data = create_categorical_variable(precipitation_df)
+    
+    print(f"Categorical data created with {len(categorical_data)} samples.")
 
     historical_df = load_projection_data("historical")
 
     train_df = historical_df.join(categorical_data, how="inner")
-
+    print(f"Training set loaded with {len(train_df)} samples.")
+    
     ssp1_df = load_projection_data("ssp1_2_6")  # Low emissions
     ssp2_df = load_projection_data("ssp2_4_5")  # Medium emissions
     ssp5_df = load_projection_data("ssp5_8_5")  # High emissions
 
-    return train_df, ssp1_df, ssp2_df, ssp5_df
+    print(f"SSP1 set loaded with {len(ssp1_df)} samples.")
+    print(f"SSP2 set loaded with {len(ssp2_df)} samples.")
+    print(f"SSP5 set loaded with {len(ssp5_df)} samples.")
+    
+    flood_risk_df = load_flood_risk_data()
+    
+    print(f"Flood risk set loaded with {len(flood_risk_df)} samples.")
 
+    return train_df, ssp1_df, ssp2_df, ssp5_df, flood_risk_df
 
 def load_precipitation_data():
     """
     Goes into the zip file and loads the precipitation data for each variable for each year
-    and merge evrything into a single dataframe.
+    and merge everything into a single dataframe.
     """
     precipitation_df = pd.DataFrame()
     for variable, variable_name in DataConfig.EXTREME_PRECIPITATION_VARIABLES.items():
@@ -80,7 +92,7 @@ def load_precipitation_data():
 def load_projection_data(experiment):
     """
     Goes into the zip file and loads the projections data for each variable for each year
-    and merge evrything into a single dataframe.
+    and merge everything into a single dataframe.
     """
     projections_df = pd.DataFrame()
     for variable in DataConfig.PROJECTIONS_VARIABLES:
@@ -120,6 +132,63 @@ def load_projection_data(experiment):
                 os.remove(temp_file_path)
 
     return projections_df
+
+def load_flood_risk_data():
+    """
+    Goes into the zip files and loads the flood risk data for each variable for each year
+    and merge everything into a single dataframe.
+    """
+    flood_risk_df = pd.DataFrame()
+    for variable in DataConfig.FLOOD_RISK_VARIABLES:
+        variable_df_list = []
+        for start_year in range(2000, 2025, 10):
+            end_year = min(start_year + 9, 2024)
+            file_name = f"flood_risk_{start_year}_{end_year}.zip"
+            zip_path = DataConfig.DATA_PATH / file_name
+
+            # Create a temporary file
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                temp_file_path = tmp_file.name
+
+                # Open the ZIP file
+                with zipfile.ZipFile(zip_path, 'r') as z:
+                    # Extract only the .nc files inside the ZIP to the temporary directory
+                    for file_info in z.infolist():
+                        if file_info.filename.endswith('.nc'):
+                            with z.open(file_info.filename) as f:
+                                tmp_file.write(f.read())
+                
+                print(f"extracted zip file {zip_path}")
+
+                # Load the NetCDF files with xarray
+                dataset = xr.open_dataset(
+                    os.path.join(temp_file_path),
+                    engine='netcdf4',
+                ).to_dataframe().reset_index()
+
+                columns_to_keep = ['lat', 'lon', 'time', variable]
+                dataset = dataset[columns_to_keep]
+                dataset.columns = ["latitude", "longitude", "time", variable]
+                dataset = dataset[["time", "latitude", "longitude", variable]]
+                dataset = easier_coordinates(dataset.dropna())
+
+                variable_df_list.append(dataset)
+
+                os.remove(temp_file_path)
+
+        # Concatenate all yearly data for the current variable
+        variable_df = pd.concat(variable_df_list).dropna()
+
+        # Merge the data for all variables
+        if flood_risk_df.empty:
+            flood_risk_df = variable_df
+        else:
+            flood_risk_df = flood_risk_df.merge(variable_df, on=['time', 'latitude', 'longitude'], how='outer')
+
+    # Save the flood risk data to a CSV file
+    flood_risk_df.to_csv(DataConfig.DATA_PATH / 'flood_risk_data.csv', index=False)
+
+    return flood_risk_df
 
 def create_categorical_variable(precipitation_df):
     """

@@ -1,43 +1,14 @@
-### This file contains the configuration used to make API requests to copernicus
-
 from pathlib import Path
 
 class DataConfig:
     DATA_PATH = Path("data")
 
-    HISTORICAL_PERIOD = [
-        "2000",
-        "2001",
-        "2002",
-        "2003",
-        "2004",
-        "2005",
-        "2006",
-        "2007",
-        "2008",
-        "2009",
-        "2010",
-        "2011",
-        "2012",
-        "2013",
-        "2014",
-    ]
+    # Time periods
+    HISTORICAL_PERIOD = [str(year) for year in range(2000, 2015)]
+    PROJECTIONS_PERIOD = [str(year) for year in range(2019, 2031)]
+    FLOOD_DATA_PERIOD = [str(year) for year in range(2000, 2025)]
 
-    PROJECTIONS_PERIOD = [
-        "2019",
-        "2020",
-        "2021",
-        "2022",
-        "2023",
-        "2024",
-        "2025",
-        "2026",
-        "2027",
-        "2028",
-        "2029",
-        "2030",
-    ]
-
+    # Precipitation Data
     EXTREME_PRECIPITATION_DATASET = "sis-european-risk-extreme-precipitation-indicators"
 
     EXTREME_PRECIPITATION_VARIABLES = {
@@ -45,7 +16,6 @@ class DataConfig:
         "maximum_5_day_precipitation": "max-5day-precipitation",
         "number_of_consecutive_wet_days": "number-of-consecutive-wet-days",
         "number_of_precipitation_days_exceeding_20mm": "number-of-events-exceeding-20mm",
-        # "number_of_precipitation_days_exceeding_fixed_percentile": "number-of-events-exceeding-fixed-percentile",
         "number_of_wet_days": "number-of-wet-days",
         "total_precipitation": "total-precipitation",
     }
@@ -54,22 +24,39 @@ class DataConfig:
         "spatial_coverage": ["europe"],
         "variable": list(EXTREME_PRECIPITATION_VARIABLES.keys()),
         "product_type": ["e_obs"],
-        "temporal_aggregation": [
-            "monthly",
-        ],
-        "percentile": [
-            "99th"
-        ],
-        "period": HISTORICAL_PERIOD
+        "temporal_aggregation": ["monthly"],
+        "percentile": ["99th"],
+        "period": HISTORICAL_PERIOD,
     }
 
+    # CMIP6 Projections Data
     PROJECTIONS_DATASET = "projections-cmip6"
-
     PROJECTIONS_EXPERIMENTS = ["historical", "ssp1_2_6", "ssp2_4_5", "ssp5_8_5"]
-
-    PROJECTIONS_VARIABLES = ["precipitation", "air_temperature"]
-
+    PROJECTIONS_VARIABLES = ["precipitation", "air_temperature","total_runoff","snowfall_flux"]
     PROJECTIONS_MODELS = ["cnrm_cm6_1"]
+
+    # Flood Risk Data (CEMS GLOFAS)                                                                                                         
+    FLOOD_RISK_DATASET = "cems-glofas-historical"
+
+    FLOOD_RISK_VARIABLES = [
+        "river_discharge_in_the_last_24_hours",
+        "runoff_water_equivalent",
+        "snow_depth_water_equivalent",
+        "soil_wetness_index",
+    ]
+
+    FLOOD_RISK_REQUEST = {
+        "system_version": ["version_4_0"],
+        "hydrological_model": ["lisflood"],
+        "product_type": ["consolidated"],
+        "variable": FLOOD_RISK_VARIABLES,
+        "hyear": FLOOD_DATA_PERIOD,
+        "hmonth": [f"{month:02d}" for month in range(1, 13)],
+        "hday": ["01"],
+        "data_format": "netcdf",
+        "download_format": "zip",
+        "area": [71, -25, 35, 45],  # Europe region
+    }
 
 class ProjectionRequest:
     def __init__(self, model, variable, experiment, period):
@@ -85,11 +72,6 @@ class ProjectionRequest:
             "variable": self.variable,
             "model": self.model,
             "year": self.period,
-            "month": [
-                "01", "02", "03",
-                "04", "05", "06",
-                "07", "08", "09",
-                "10", "11", "12"
-            ],
-            "area": [71, -25, 35, 45] # Europe
+            "month": [f"{month:02d}" for month in range(1, 13)],
+            "area": [71, -25, 35, 45],  # Europe region
         }
