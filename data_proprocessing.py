@@ -127,12 +127,12 @@ def create_categorical_variable(precipitation_df):
     """
     # TODO : This is a basic implementation but we'll need to put more thoughts into it
     categorical_data = pd.DataFrame(index=precipitation_df.index)
-    categorical_data["risk_of_flooding"] = "low"
+    categorical_data["target"] = "low"
     for variable in DataConfig.EXTREME_PRECIPITATION_VARIABLES:
         if variable == "number_of_precipitation_days_exceeding_fixed_percentile":
             continue
         categorical_data.loc[
-            precipitation_df[variable] > 0.95, "risk_of_flooding"
+            precipitation_df[variable] > 0.95, "target"
         ] = "high"
 
     return categorical_data

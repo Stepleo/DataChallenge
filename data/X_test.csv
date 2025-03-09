@@ -1,4 +1,4 @@
-time,latitude,longitude,precipitation,air_temperature,risk_of_flooding
+time,latitude,longitude,precipitation,air_temperature,target
 2013-07-01,64.0,-4.0,5.796327e-06,243.18092,high
 2005-07-01,50.0,-13.0,2.0606509e-05,243.12903,high
 2002-07-01,65.0,0.0,1.7348473e-05,244.19046,high
