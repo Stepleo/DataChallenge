@@ -48,8 +48,8 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # Check if the model is already trained and saved
-model_path = 'model.pkl'
-scaler_path = 'scaler.pkl'
+model_path = 'model2.pkl'
+scaler_path = 'scaler2.pkl'
 
 if os.path.exists(model_path) and os.path.exists(scaler_path):
     del X, y, X_train, y_train, X_train_scaled, X_test_scaled
@@ -60,7 +60,7 @@ if os.path.exists(model_path) and os.path.exists(scaler_path):
 else:
     print("Training a new model...")
     # Train a Random Forest Classifier
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model = RandomForestClassifier(n_estimators=100)
 
     # Fit the model on the scaled training data
     model.fit(X_train_scaled, y_train)

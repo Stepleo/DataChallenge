@@ -2,6 +2,7 @@
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
@@ -38,7 +39,7 @@ class Preprocessor(BaseEstimator, TransformerMixin):
 def get_estimator():
     pipe = make_pipeline(
         Preprocessor(),
-        LogisticRegression()
+        RandomForestClassifier(n_estimators=100)
     )
 
     return pipe

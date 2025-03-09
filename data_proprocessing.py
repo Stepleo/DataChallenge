@@ -206,7 +206,7 @@ def load_flood_risk_data():
 def create_categorical_variable(precipitation_df):
     """
     Create a categorical variable for the risk of flooding based on the precipitation data.
-    A row is classified as 'high' if it is above the 50th percentile in all variables.
+    A row is classified as 'high' if at least 3 variables are above the 50th percentile.
     """
     # Calculate the 50th percentile for each variable
     percentiles = precipitation_df.quantile(0.50)
@@ -215,11 +215,13 @@ def create_categorical_variable(precipitation_df):
     categorical_data = pd.DataFrame(index=precipitation_df.index)
     categorical_data["target"] = "low"
 
-    # Check if all variables are above their respective 50th percentile
-    above_percentile = (precipitation_df > percentiles).all(axis=1)
+    # Check if at least 3 variables are above their respective 50th percentile
+    above_percentile_count = (precipitation_df > percentiles).sum(axis=1)
+    categorical_data.loc[above_percentile_count >= 4, "target"] = "high"
 
-    # Classify as 'high' if all conditions are met
-    categorical_data.loc[above_percentile, "target"] = "high"
+    # Summarize the categorical data distribution
+    print("Categorical data distribution:")
+    print(categorical_data["target"].value_counts(normalize=True))
 
     return categorical_data
 

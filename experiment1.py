@@ -50,8 +50,8 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # Check if the model is already trained and saved
-model_path = 'model_target.pkl'
-scaler_path = 'scaler_target.pkl'
+model_path = 'model_target1.pkl'
+scaler_path = 'scaler_target1.pkl'
 
 if os.path.exists(model_path) and os.path.exists(scaler_path):
     del X, y, X_train, y_train, X_train_scaled, X_test_scaled
