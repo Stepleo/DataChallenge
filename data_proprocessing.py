@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import numpy as np
 import xarray as xr
+import psutil
 
 from data_config import DataConfig
 
@@ -27,6 +28,8 @@ def load_data():
 
     train_df = historical_df.join(categorical_data, how="inner")
     print(f"Training set loaded with {len(train_df)} samples.")
+
+    
     
     ssp1_df = load_projection_data("ssp1_2_6")  # Low emissions
     ssp2_df = load_projection_data("ssp2_4_5")  # Medium emissions
@@ -49,6 +52,7 @@ def load_precipitation_data():
     """
     precipitation_df = pd.DataFrame()
     for variable, variable_name in DataConfig.EXTREME_PRECIPITATION_VARIABLES.items():
+        print(f"Loading {variable_name} data...")
         variable_df_list = []
         for year in DataConfig.HISTORICAL_PERIOD:
             file_name = (
@@ -59,36 +63,48 @@ def load_precipitation_data():
             # Go fetch this file in the zip file
             zip_path = DataConfig.DATA_PATH / "precipitation.zip"
             # Create a temporary file
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            with tempfile.NamedTemporaryFile(delete=True) as tmp_file:
                 temp_file_path = tmp_file.name
 
                 # Open the ZIP file
                 with zipfile.ZipFile(zip_path, 'r') as z:
+                    #check if the file is in the zip
+                    if file_name not in z.namelist():
+                        print(f"{file_name} not found in the zip !")
+                        continue
                     # Extract the file inside the ZIP to the temporary file
                     with z.open(file_name) as f:
                         tmp_file.write(f.read())
 
-            # Load the NetCDF file with xarray
-            dataset = xr.open_dataset(temp_file_path, engine='netcdf4').to_dataframe()
+                # Load the NetCDF file with xarray
+                dataset = xr.open_dataset(temp_file_path, engine='netcdf4').to_dataframe()
 
-            dataset.columns = [variable]
+                dataset.columns = [variable]
 
-            variable_df_list.append(dataset.reset_index())
+                variable_df_list.append(dataset.reset_index())
 
-            os.remove(temp_file_path)
 
         # Concatenate all yearly data for the current variable
         variable_df = pd.concat(variable_df_list).dropna()
         variable_df = easier_coordinates(variable_df)
+   
 
         # Merge the data for all variables
         if precipitation_df.empty:
             precipitation_df = variable_df
         else:
             precipitation_df = precipitation_df.merge(variable_df, on=['time', 'latitude', 'longitude'], how='outer')
-
+            
+        print_memory_usage(f"Loaded {variable_name} data.")
     return precipitation_df
 
+def print_memory_usage(message):
+    """Print the current memory usage with a custom message."""
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    print(f"{message} Memory usage: {mem_info.rss / (1024 ** 2):.2f} MB")
+    
+    
 def load_projection_data(experiment):
     """
     Goes into the zip file and loads the projections data for each variable for each year
@@ -139,51 +155,48 @@ def load_flood_risk_data():
     and merge everything into a single dataframe.
     """
     flood_risk_df = pd.DataFrame()
-    for variable in DataConfig.FLOOD_RISK_VARIABLES:
-        variable_df_list = []
-        for start_year in range(2000, 2025, 10):
-            end_year = min(start_year + 9, 2024)
-            file_name = f"flood_risk_{start_year}_{end_year}.zip"
-            zip_path = DataConfig.DATA_PATH / file_name
+    year_df_list = []
+    for start_year in range(2000, 2025, 1):
+        end_year = min(start_year + 0, 2024)
+        file_name = f"flood_risk_{start_year}_{end_year}.zip"
+        zip_path = DataConfig.DATA_PATH / file_name
 
-            # Create a temporary file
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                temp_file_path = tmp_file.name
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            temp_file_path = tmp_file.name
 
-                # Open the ZIP file
-                with zipfile.ZipFile(zip_path, 'r') as z:
-                    # Extract only the .nc files inside the ZIP to the temporary directory
-                    for file_info in z.infolist():
-                        if file_info.filename.endswith('.nc'):
-                            with z.open(file_info.filename) as f:
-                                tmp_file.write(f.read())
-                
-                print(f"extracted zip file {zip_path}")
+            # Open the ZIP file
+            with zipfile.ZipFile(zip_path, 'r') as z:
+                # Extract only the .nc files inside the ZIP to the temporary directory
+                for file_info in z.infolist():
+                    if file_info.filename.endswith('.nc'):
+                        with z.open(file_info.filename) as f:
+                            tmp_file.write(f.read())
+            
+            print(f"extracted zip file {zip_path}")
 
-                # Load the NetCDF files with xarray
-                dataset = xr.open_dataset(
-                    os.path.join(temp_file_path),
-                    engine='netcdf4',
-                ).to_dataframe().reset_index()
+            # Load the NetCDF files with xarray
+            dataset = xr.open_dataset(
+                os.path.join(temp_file_path),
+                engine='netcdf4',
+            ).to_dataframe().reset_index()
 
-                columns_to_keep = ['lat', 'lon', 'time', variable]
-                dataset = dataset[columns_to_keep]
-                dataset.columns = ["latitude", "longitude", "time", variable]
-                dataset = dataset[["time", "latitude", "longitude", variable]]
-                dataset = easier_coordinates(dataset.dropna())
+            #rename valid_time column to time to match the other datasets
+            dataset = dataset.rename(columns={"valid_time": "time"})
+            dataset = easier_coordinates(dataset.dropna())
 
-                variable_df_list.append(dataset)
+            year_df_list.append(dataset)
 
-                os.remove(temp_file_path)
+            os.remove(temp_file_path)
 
         # Concatenate all yearly data for the current variable
-        variable_df = pd.concat(variable_df_list).dropna()
+        variable_df = pd.concat(year_df_list).dropna()
 
-        # Merge the data for all variables
-        if flood_risk_df.empty:
-            flood_risk_df = variable_df
-        else:
-            flood_risk_df = flood_risk_df.merge(variable_df, on=['time', 'latitude', 'longitude'], how='outer')
+    # Merge the data for all variables
+    if flood_risk_df.empty:
+        flood_risk_df = variable_df
+    else:
+        flood_risk_df = flood_risk_df.merge(variable_df, on=['time', 'latitude', 'longitude'], how='outer')
 
     # Save the flood risk data to a CSV file
     flood_risk_df.to_csv(DataConfig.DATA_PATH / 'flood_risk_data.csv', index=False)

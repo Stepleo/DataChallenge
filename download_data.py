@@ -7,7 +7,7 @@ from data_proprocessing import load_data
 
 def download_flood_risk_data(client, dataset_name, request_params, save_path_template):
     """Download flood risk data in chunks to avoid large requests."""
-    years_per_request = 10  # Adjust this number based on the API limitations
+    years_per_request = 1  # Adjust this number based on the API limitations
     years = request_params["hyear"]
 
     for i in range(0, len(years), years_per_request):
